@@ -3,33 +3,617 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Aplicación Web</title>
+    <title>Gestor de Tareas y Categorías</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-            color: #333;
-            text-align: center;
-            padding: 50px;
+        /* Animaciones y estilos personalizados */
+        .task-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin: auto;
+        .task-card:hover {
+            transform: translateY(-2px);
         }
-        h1 {
-            color: #0366d6;
+        .completed-text {
+            text-decoration: line-through;
+            opacity: 0.55;
+        }
+        /* Ocultar scrollbar en navegadores manteniendo scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>¡Hola, ya funciona! 🚀</h1>
-        <p>Esta es la página principal de mi aplicación web alojada en GitHub Pages.</p>
-        <p>Aquí podrás empezar a añadir tus funciones, botones o herramientas.</p>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Header / Navbar Principal -->
+    <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <!-- Branding -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                    <i class="fa-solid fa-list-check text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight">TaskMaster</h1>
+                    <p class="text-xs text-slate-500 font-medium">Gestor Inteligente de Tareas</p>
+                </div>
+            </div>
+
+            <!-- Acciones Principales -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="btn-open-category-modal" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl transition-colors">
+                    <i class="fa-solid fa-tags text-slate-500"></i>
+                    <span class="hidden sm:inline">Nueva</span> Categoría
+                </button>
+                <button id="btn-open-task-modal" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl shadow-md shadow-brand-600/20 transition-all hover:shadow-lg hover:shadow-brand-600/30">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nueva Tarea</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+
+        <!-- Resumen Estadístico (Tarjetas de Métricas) -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Tareas</p>
+                    <h3 id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <i class="fa-solid fa-layer-group text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pendientes</p>
+                    <h3 id="stat-pending" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <i class="fa-regular fa-clock text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completadas</p>
+                    <h3 id="stat-completed" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <i class="fa-regular fa-circle-check text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Barra de Filtros y Búsqueda -->
+        <section class="bg-white p-4 rounded-2xl border border-slate-200/70 shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row gap-3 justify-between items-center">
+                
+                <!-- Búsqueda por Texto -->
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="filter-search" placeholder="Buscar tarea..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                </div>
+
+                <!-- Filtros Combinados (Estado + Categorías) -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                    
+                    <!-- Filtro por Estado -->
+                    <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-medium w-full sm:w-auto justify-center">
+                        <button id="filter-status-all" class="filter-status-btn px-3 py-1.5 rounded-lg font-semibold bg-white text-slate-800 shadow-sm transition-all" data-status="all">Todas</button>
+                        <button id="filter-status-pending" class="filter-status-btn px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all" data-status="pending">Pendientes</button>
+                        <button id="filter-status-completed" class="filter-status-btn px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all" data-status="completed">Completadas</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Carrusel de Filtro por Categorías -->
+            <div class="pt-2 border-t border-slate-100">
+                <p class="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Filtrar por categoría:</p>
+                <div id="category-filter-list" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <!-- Dinámico vía JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista de Tareas -->
+        <section>
+            <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Tarjetas cargadas mediante JS -->
+            </div>
+
+            <!-- Estado Vacío -->
+            <div id="empty-state" class="hidden flex-col items-center justify-center py-16 px-4 text-center bg-white rounded-2xl border border-dashed border-slate-200">
+                <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-4 text-2xl">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3 class="text-base font-semibold text-slate-700">No hay tareas encontradas</h3>
+                <p class="text-xs text-slate-400 mt-1 max-w-sm">No hay nada pendiente con los filtros aplicados o aún no has creado ninguna tarea.</p>
+                <button id="btn-empty-add" class="mt-4 px-4 py-2 bg-brand-50 text-brand-600 hover:bg-brand-100 text-xs font-bold rounded-xl transition-colors">
+                    + Crear mi primera tarea
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Nueva / Editar Tarea -->
+    <div id="modal-task" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 id="modal-task-title" class="font-bold text-slate-800 text-base">Nueva Tarea</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="form-task" class="p-6 space-y-4">
+                <input type="hidden" id="task-id">
+                
+                <!-- Título de la tarea -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Título *</label>
+                    <input type="text" id="task-title-input" required placeholder="Ej. Preparar informe trimestral" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                </div>
+
+                <!-- Categoría -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Categoría *</label>
+                    <select id="task-category-select" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                        <!-- Opciones dinámicas -->
+                    </select>
+                </div>
+
+                <!-- Descripción -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Descripción (Opcional)</label>
+                    <textarea id="task-desc-input" rows="3" placeholder="Detalles o notas sobre la tarea..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"></textarea>
+                </div>
+
+                <!-- Fecha Límite -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Fecha Límite (Opcional)</label>
+                    <input type="date" id="task-date-input" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                </div>
+
+                <!-- Botones Acción -->
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                    <button type="button" class="btn-close-modal px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md shadow-brand-600/20 transition-all">Guardar Tarea</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <!-- Modal: Nueva Categoría -->
+    <div id="modal-category" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-base">Nueva Categoría</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="form-category" class="p-6 space-y-4">
+                <!-- Nombre de Categoría -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Nombre de Categoría *</label>
+                    <input type="text" id="cat-name-input" required placeholder="Ej. Finanzas, Estudio..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                </div>
+
+                <!-- Color representativo -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Color Representativo</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="cat-color-input" value="#3b82f6" class="w-10 h-10 rounded-xl border-0 cursor-pointer p-0">
+                        <span id="cat-color-hex" class="text-xs font-mono text-slate-500">#3b82f6</span>
+                    </div>
+                </div>
+
+                <!-- Icono opcional -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Icono Representativo</label>
+                    <div class="grid grid-cols-6 gap-2 pt-1" id="icon-picker">
+                        <!-- Iconos de FontAwesome seleccionables -->
+                        <button type="button" data-icon="fa-briefcase" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm active"><i class="fa-solid fa-briefcase"></i></button>
+                        <button type="button" data-icon="fa-user" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-user"></i></button>
+                        <button type="button" data-icon="fa-folder" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-folder"></i></button>
+                        <button type="button" data-icon="fa-bolt" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-bolt"></i></button>
+                        <button type="button" data-icon="fa-heart" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-heart"></i></button>
+                        <button type="button" data-icon="fa-graduation-cap" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-graduation-cap"></i></button>
+                    </div>
+                </div>
+
+                <!-- Botones Acción -->
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                    <button type="button" class="btn-close-modal px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-md transition-all">Crear Categoría</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lógica de la Aplicación -->
+    <script>
+        // --- DATOS INICIALES POR DEFECTO ---
+        const DEFAULT_CATEGORIES = [
+            { id: 'cat-1', name: 'Trabajo', color: '#2563eb', icon: 'fa-briefcase' },
+            { id: 'cat-2', name: 'Personal', color: '#ec4899', icon: 'fa-user' },
+            { id: 'cat-3', name: 'Proyectos', color: '#8b5cf6', icon: 'fa-folder' },
+            { id: 'cat-4', name: 'Urgente', color: '#ef4444', icon: 'fa-bolt' }
+        ];
+
+        const DEFAULT_TASKS = [
+            {
+                id: 'task-1',
+                title: 'Revisar propuesta comercial',
+                description: 'Verificar los términos económicos e impositivos antes de enviar al cliente.',
+                categoryId: 'cat-1',
+                completed: false,
+                dueDate: '2026-11-10'
+            },
+            {
+                id: 'task-2',
+                title: 'Comprar suministros de oficina',
+                description: 'Tinta para impresoras y folios A4.',
+                categoryId: 'cat-2',
+                completed: true,
+                dueDate: ''
+            }
+        ];
+
+        // --- ESTADO DE LA APLICACIÓN ---
+        let categories = JSON.parse(localStorage.getItem('tm_categories')) || DEFAULT_CATEGORIES;
+        let tasks = JSON.parse(localStorage.getItem('tm_tasks')) || DEFAULT_TASKS;
+
+        let selectedCategoryFilter = 'all';
+        let selectedStatusFilter = 'all';
+        let searchQuery = '';
+        let selectedIcon = 'fa-briefcase';
+
+        // --- ELEMENTOS DOM ---
+        const tasksContainer = document.getElementById('tasks-container');
+        const emptyState = document.getElementById('empty-state');
+        const categoryFilterList = document.getElementById('category-filter-list');
+        const taskCategorySelect = document.getElementById('task-category-select');
+
+        const modalTask = document.getElementById('modal-task');
+        const modalCategory = document.getElementById('modal-category');
+        const formTask = document.getElementById('form-task');
+        const formCategory = document.getElementById('form-category');
+
+        const statTotal = document.getElementById('stat-total');
+        const statPending = document.getElementById('stat-pending');
+        const statCompleted = document.getElementById('stat-completed');
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategories();
+            renderTasks();
+            setupEventListeners();
+        });
+
+        // --- GUARDADO LOCALSTORAGE ---
+        function saveData() {
+            localStorage.setItem('tm_categories', JSON.stringify(categories));
+            localStorage.setItem('tm_tasks', JSON.stringify(tasks));
+        }
+
+        // --- RENDERIZADO DE CATEGORÍAS ---
+        function renderCategories() {
+            // 1. Renderizar Filtros de Categoría
+            categoryFilterList.innerHTML = `
+                <button data-cat="all" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${selectedCategoryFilter === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    Todas
+                </button>
+            `;
+
+            categories.forEach(cat => {
+                const isActive = selectedCategoryFilter === cat.id;
+                const btn = document.createElement('button');
+                btn.setAttribute('data-cat', cat.id);
+                btn.className = `cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all ${isActive ? 'ring-2 ring-offset-1 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`;
+                
+                if(isActive) {
+                    btn.style.backgroundColor = cat.color;
+                    btn.style.setProperty('--tw-ring-color', cat.color);
+                }
+
+                btn.innerHTML = `
+                    <i class="fa-solid ${cat.icon || 'fa-tag'}" style="color: ${isActive ? '#ffffff' : cat.color}"></i>
+                    <span>${cat.name}</span>
+                `;
+                categoryFilterList.appendChild(btn);
+            });
+
+            // 2. Renderizar Opciones de Categoría en el Select del Formulario
+            taskCategorySelect.innerHTML = categories.map(cat => `
+                <option value="${cat.id}">${cat.name}</option>
+            `).join('');
+        }
+
+        // --- RENDERIZADO DE TAREAS Y ESTADÍSTICAS ---
+        function renderTasks() {
+            // Filtrar Tareas
+            const filteredTasks = tasks.filter(task => {
+                // Filtro Categoría
+                const matchesCategory = selectedCategoryFilter === 'all' || task.categoryId === selectedCategoryFilter;
+                
+                // Filtro Estado
+                const matchesStatus = selectedStatusFilter === 'all' ||
+                    (selectedStatusFilter === 'completed' && task.completed) ||
+                    (selectedStatusFilter === 'pending' && !task.completed);
+                
+                // Búsqueda Texto
+                const query = searchQuery.toLowerCase();
+                const matchesSearch = task.title.toLowerCase().includes(query) || (task.description && task.description.toLowerCase().includes(query));
+
+                return matchesCategory && matchesStatus && matchesSearch;
+            });
+
+            // Actualizar Estadísticas
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+
+            statTotal.textContent = total;
+            statPending.textContent = pending;
+            statCompleted.textContent = completed;
+
+            // Mostrar/Ocultar estado vacío
+            if (filteredTasks.length === 0) {
+                tasksContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                tasksContainer.innerHTML = filteredTasks.map(task => {
+                    const category = categories.find(c => c.id === task.categoryId) || { name: 'Sin categoría', color: '#64748b', icon: 'fa-tag' };
+                    
+                    return `
+                        <div class="task-card bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col justify-between relative group">
+                            <div>
+                                <!-- Header Tarjeta: Badge Categoría y Acciones -->
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold" style="background-color: ${category.color}15; color: ${category.color}">
+                                        <i class="fa-solid ${category.icon}"></i>
+                                        ${category.name}
+                                    </span>
+                                    
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="editTask('${task.id}')" class="p-1.5 text-slate-400 hover:text-brand-600 rounded-lg hover:bg-slate-50 transition-colors" title="Editar">
+                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                        </button>
+                                        <button onclick="deleteTask('${task.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors" title="Eliminar">
+                                            <i class="fa-regular fa-trash-can text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Checkbox y Título -->
+                                <div class="flex items-start gap-3">
+                                    <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTaskStatus('${task.id}')" class="mt-1 w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500/20 cursor-pointer">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-sm leading-snug ${task.completed ? 'completed-text' : ''}">${escapeHtml(task.title)}</h4>
+                                        ${task.description ? `<p class="text-xs text-slate-500 mt-1.5 line-clamp-2 ${task.completed ? 'opacity-60' : ''}">${escapeHtml(task.description)}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Tarjeta: Fecha -->
+                            ${task.dueDate ? `
+                                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs text-slate-400 font-medium gap-1.5">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    <span>${formatDate(task.dueDate)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // --- GESTIÓN DE EVENTOS ---
+        function setupEventListeners() {
+            // Abrir Modales
+            document.getElementById('btn-open-task-modal').addEventListener('click', () => openTaskModal());
+            document.getElementById('btn-open-category-modal').addEventListener('click', () => openCategoryModal());
+            document.getElementById('btn-empty-add').addEventListener('click', () => openTaskModal());
+
+            // Cerrar Modales
+            document.querySelectorAll('.btn-close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modalTask.classList.add('hidden');
+                    modalCategory.classList.add('hidden');
+                });
+            });
+
+            // Guardar Tarea
+            formTask.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('task-id').value;
+                const title = document.getElementById('task-title-input').value.trim();
+                const categoryId = document.getElementById('task-category-select').value;
+                const description = document.getElementById('task-desc-input').value.trim();
+                const dueDate = document.getElementById('task-date-input').value;
+
+                if (id) {
+                    // Editar
+                    const taskIndex = tasks.findIndex(t => t.id === id);
+                    if (taskIndex !== -1) {
+                        tasks[taskIndex] = { ...tasks[taskIndex], title, categoryId, description, dueDate };
+                    }
+                } else {
+                    // Crear
+                    tasks.unshift({
+                        id: 'task-' + Date.now(),
+                        title,
+                        categoryId,
+                        description,
+                        dueDate,
+                        completed: false
+                    });
+                }
+
+                saveData();
+                renderTasks();
+                modalTask.classList.add('hidden');
+            });
+
+            // Guardar Categoría
+            formCategory.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('cat-name-input').value.trim();
+                const color = document.getElementById('cat-color-input').value;
+
+                categories.push({
+                    id: 'cat-' + Date.now(),
+                    name,
+                    color,
+                    icon: selectedIcon
+                });
+
+                saveData();
+                renderCategories();
+                renderTasks();
+                modalCategory.classList.add('hidden');
+            });
+
+            // Selector de Color Sync
+            document.getElementById('cat-color-input').addEventListener('input', (e) => {
+                document.getElementById('cat-color-hex').textContent = e.target.value;
+            });
+
+            // Selector de Iconos
+            document.querySelectorAll('.icon-option').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.icon-option').forEach(b => b.classList.remove('border-brand-500', 'bg-brand-50', 'text-brand-600'));
+                    const target = e.currentTarget;
+                    target.classList.add('border-brand-500', 'bg-brand-50', 'text-brand-600');
+                    selectedIcon = target.dataset.icon;
+                });
+            });
+
+            // Filtros de Categoría (Delegación de Eventos)
+            categoryFilterList.addEventListener('click', (e) => {
+                const btn = e.target.closest('.cat-filter-btn');
+                if (!btn) return;
+                selectedCategoryFilter = btn.dataset.cat;
+                renderCategories();
+                renderTasks();
+            });
+
+            // Filtros de Estado
+            document.querySelectorAll('.filter-status-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-status-btn').forEach(b => {
+                        b.classList.remove('bg-white', 'text-slate-800', 'shadow-sm', 'font-semibold');
+                        b.classList.add('text-slate-600');
+                    });
+                    e.currentTarget.classList.add('bg-white', 'text-slate-800', 'shadow-sm', 'font-semibold');
+                    e.currentTarget.classList.remove('text-slate-600');
+                    selectedStatusFilter = e.currentTarget.dataset.status;
+                    renderTasks();
+                });
+            });
+
+            // Búsqueda
+            document.getElementById('filter-search').addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                renderTasks();
+            });
+        }
+
+        // --- FUNCIONES AUXILIARES ---
+        function toggleTaskStatus(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                saveData();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(taskId) {
+            tasks = tasks.filter(t => t.id !== taskId);
+            saveData();
+            renderTasks();
+        }
+
+        function editTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('task-title-input').value = task.title;
+            document.getElementById('task-category-select').value = task.categoryId;
+            document.getElementById('task-desc-input').value = task.description || '';
+            document.getElementById('task-date-input').value = task.dueDate || '';
+
+            document.getElementById('modal-task-title').textContent = 'Editar Tarea';
+            modalTask.classList.remove('hidden');
+        }
+
+        function openTaskModal() {
+            formTask.reset();
+            document.getElementById('task-id').value = '';
+            document.getElementById('modal-task-title').textContent = 'Nueva Tarea';
+            modalTask.classList.remove('hidden');
+        }
+
+        function openCategoryModal() {
+            formCategory.reset();
+            modalCategory.classList.remove('hidden');
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES', options);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
 </body>
 </html>
