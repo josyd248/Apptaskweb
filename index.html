@@ -64,8 +64,8 @@
                     <i class="fa-solid fa-list-check text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg text-slate-900 leading-tight">TaskMaster</h1>
-                    <p class="text-xs text-slate-500 font-medium">Gestor Inteligente de Tareas</p>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight">TaskMaster Taller</h1>
+                    <p class="text-xs text-slate-500 font-medium">Gestor de Órdenes y Tareas</p>
                 </div>
             </div>
 
@@ -73,7 +73,7 @@
             <div class="flex items-center gap-2 sm:gap-3">
                 <button id="btn-open-category-modal" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl transition-colors">
                     <i class="fa-solid fa-wrench text-slate-500"></i>
-                    <span>Categorías Taller</span>
+                    <span>Categorías</span>
                 </button>
                 <button id="btn-open-task-modal" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl shadow-md shadow-brand-600/20 transition-all hover:shadow-lg hover:shadow-brand-600/30">
                     <i class="fa-solid fa-plus"></i>
@@ -250,12 +250,12 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Icono de Taller</label>
                     <div class="grid grid-cols-6 gap-2 pt-1" id="icon-picker">
-                        <button type="button" data-icon="fa-wrench" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm active"><i class="fa-solid fa-wrench"></i></button>
+                        <button type="button" data-icon="fa-wrench" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-wrench"></i></button>
                         <button type="button" data-icon="fa-gear" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-gear"></i></button>
                         <button type="button" data-icon="fa-car" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-car"></i></button>
                         <button type="button" data-icon="fa-truck" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-truck"></i></button>
                         <button type="button" data-icon="fa-bolt" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-bolt"></i></button>
-                        <button type="button" data-[#icon]="fa-oil-can" data-icon="fa-oil-can" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-oil-can"></i></button>
+                        <button type="button" data-icon="fa-oil-can" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-oil-can"></i></button>
                         <button type="button" data-icon="fa-gauge" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-gauge"></i></button>
                         <button type="button" data-icon="fa-battery-full" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-battery-full"></i></button>
                         <button type="button" data-icon="fa-screwdriver-wrench" class="icon-option p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-center text-sm"><i class="fa-solid fa-screwdriver-wrench"></i></button>
@@ -278,7 +278,7 @@
     <script>
         // --- DATOS INICIALES POR DEFECTO PARA TALLER ---
         const DEFAULT_CATEGORIES = [
-            { id: 'cat-1', name: 'Mecánica Generál', color: '#2563eb', icon: 'fa-wrench' },
+            { id: 'cat-1', name: 'Mecánica General', color: '#2563eb', icon: 'fa-wrench' },
             { id: 'cat-2', name: 'Electricidad / Diagnóstico', color: '#8b5cf6', icon: 'fa-bolt' },
             { id: 'cat-3', name: 'Mantenimiento / Aceite', color: '#059669', icon: 'fa-oil-can' },
             { id: 'cat-4', name: 'Repuestos / Almacén', color: '#d97706', icon: 'fa-box' }
@@ -306,8 +306,8 @@
         ];
 
         // --- ESTADO DE LA APLICACIÓN ---
-        let categories = JSON.parse(localStorage.getItem('tm_categories')) || DEFAULT_CATEGORIES;
-        let tasks = JSON.parse(localStorage.getItem('tm_tasks')) || DEFAULT_TASKS;
+        let categories = [];
+        let tasks = [];
 
         let selectedCategoryFilter = 'all';
         let selectedStatusFilter = 'all';
@@ -329,12 +329,23 @@
 
         // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderCategories();
-            renderTasks();
+            loadData();
             setupEventListeners();
         });
 
-        // --- GUARDADO LOCALSTORAGE ---
+        // --- CARGA Y GUARDADO LOCAL ---
+        function loadData() {
+            try {
+                categories = JSON.parse(localStorage.getItem('tm_categories')) || DEFAULT_CATEGORIES;
+                tasks = JSON.parse(localStorage.getItem('tm_tasks')) || DEFAULT_TASKS;
+            } catch (e) {
+                categories = DEFAULT_CATEGORIES;
+                tasks = DEFAULT_TASKS;
+            }
+            renderCategories();
+            renderTasks();
+        }
+
         function saveData() {
             localStorage.setItem('tm_categories', JSON.stringify(categories));
             localStorage.setItem('tm_tasks', JSON.stringify(tasks));
@@ -342,7 +353,7 @@
 
         // --- RENDERIZADO DE CATEGORÍAS ---
         function renderCategories() {
-            // 1. Renderizar Filtros de Categoría
+            // 1. Filtros de Categoría
             categoryFilterList.innerHTML = `
                 <button data-cat="all" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${selectedCategoryFilter === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                     Todas
@@ -367,12 +378,12 @@
                 categoryFilterList.appendChild(btn);
             });
 
-            // 2. Renderizar Select de Categorías en Formulario de Tarea
+            // 2. Select de Categorías en Formulario de Tarea
             taskCategorySelect.innerHTML = categories.map(cat => `
                 <option value="${cat.id}">${cat.name}</option>
             `).join('');
 
-            // 3. Renderizar Lista Editable de Categorías en Modal
+            // 3. Lista Editable de Categorías en Modal
             existingCategoriesList.innerHTML = categories.map(cat => `
                 <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200/60">
                     <div class="flex items-center gap-2">
@@ -395,7 +406,6 @@
 
         // --- RENDERIZADO DE TAREAS ---
         function renderTasks() {
-            // Filtrar Tareas
             const filteredTasks = tasks.filter(task => {
                 const matchesCategory = selectedCategoryFilter === 'all' || task.categoryId === selectedCategoryFilter;
                 const matchesPriority = selectedPriorityFilter === 'all' || task.priority === selectedPriorityFilter;
@@ -409,7 +419,6 @@
                 return matchesCategory && matchesPriority && matchesStatus && matchesSearch;
             });
 
-            // Mostrar/Ocultar estado vacío
             if (filteredTasks.length === 0) {
                 tasksContainer.innerHTML = '';
                 emptyState.classList.remove('hidden');
@@ -421,7 +430,6 @@
                 tasksContainer.innerHTML = filteredTasks.map(task => {
                     const category = categories.find(c => c.id === task.categoryId) || { name: 'Sin categoría', color: '#64748b', icon: 'fa-wrench' };
                     
-                    // Prioridad
                     let priorityBadge = '';
                     if (task.priority === 'high') {
                         priorityBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-700">🔥 URGENTE</span>`;
@@ -434,7 +442,6 @@
                     return `
                         <div class="task-card bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col justify-between relative group">
                             <div>
-                                <!-- Header Tarjeta: Categoría y Prioridad -->
                                 <div class="flex items-center justify-between gap-2 mb-3">
                                     <div class="flex items-center gap-1.5 flex-wrap">
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold" style="background-color: ${category.color}15; color: ${category.color}">
@@ -454,7 +461,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Checkbox y Título -->
                                 <div class="flex items-start gap-3">
                                     <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTaskStatus('${task.id}')" class="mt-1 w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500/20 cursor-pointer">
                                     <div>
@@ -464,7 +470,6 @@
                                 </div>
                             </div>
 
-                            <!-- Footer Tarjeta: Fecha de Entrega -->
                             ${task.dueDate ? `
                                 <div class="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs text-slate-400 font-medium gap-1.5">
                                     <i class="fa-regular fa-calendar"></i>
@@ -491,7 +496,6 @@
                 });
             });
 
-            // Guardar Tarea
             formTask.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const id = document.getElementById('task-id').value;
@@ -523,7 +527,6 @@
                 modalTask.classList.add('hidden');
             });
 
-            // Guardar o Editar Categoría
             formCategory.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const catId = document.getElementById('cat-id').value;
@@ -531,13 +534,11 @@
                 const color = document.getElementById('cat-color-input').value;
 
                 if (catId) {
-                    // Modificar existente
                     const idx = categories.findIndex(c => c.id === catId);
                     if (idx !== -1) {
                         categories[idx] = { id: catId, name, color, icon: selectedIcon };
                     }
                 } else {
-                    // Alta nueva
                     categories.push({
                         id: 'cat-' + Date.now(),
                         name,
@@ -552,12 +553,10 @@
                 resetCategoryForm();
             });
 
-            // Sync Color
             document.getElementById('cat-color-input').addEventListener('input', (e) => {
                 document.getElementById('cat-color-hex').textContent = e.target.value;
             });
 
-            // Picker de Iconos
             document.querySelectorAll('.icon-option').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     document.querySelectorAll('.icon-option').forEach(b => b.classList.remove('border-brand-500', 'bg-brand-50', 'text-brand-600'));
@@ -567,7 +566,6 @@
                 });
             });
 
-            // Filtro por Categoría
             categoryFilterList.addEventListener('click', (e) => {
                 const btn = e.target.closest('.cat-filter-btn');
                 if (!btn) return;
@@ -576,7 +574,6 @@
                 renderTasks();
             });
 
-            // Filtro por Estado
             document.querySelectorAll('.filter-status-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     document.querySelectorAll('.filter-status-btn').forEach(b => {
@@ -590,13 +587,11 @@
                 });
             });
 
-            // Filtro por Prioridad
             document.getElementById('filter-priority').addEventListener('change', (e) => {
                 selectedPriorityFilter = e.target.value;
                 renderTasks();
             });
 
-            // Búsqueda
             document.getElementById('filter-search').addEventListener('input', (e) => {
                 searchQuery = e.target.value;
                 renderTasks();
